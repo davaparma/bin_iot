@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
-        OCTOPUS_API_KEY = 'API-CT3D8ZGNZO7HOWCEH2R730GPACTXEF'
+        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY')
         OCTOPUS_URL = 'https://s224345722.octopus.app'  // Ensure this is the correct Octopus URL
     }
 
@@ -68,7 +68,7 @@ pipeline {
                 octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
                     --project 'Bin_Iot' --version "1.0.$BUILD_NUMBER" \
                     --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest" \
-                    --progress
+                    --progress --ci-server "Jenkins"
                 """
             }
         }
