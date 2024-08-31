@@ -63,7 +63,7 @@ pipeline {
                 echo 'Releasing to production using Octopus Deploy...'
                 sh '''
                 octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
-                    --project 'Your Project Name' --version "1.0.$BUILD_NUMBER" \
+                    --project 'Bin_Iot' --version "1.0.$BUILD_NUMBER" \
                     --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest"
                 '''
             }
