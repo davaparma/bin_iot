@@ -47,7 +47,7 @@ pipeline {
 
         stage('Monitoring & Alerts') {
             steps {
-                echo 'Setting up monitoring and alerts for Smart Bin IoT project!
+                echo 'Setting up monitoring and alerts for Smart Bin IoT project!' // Corrected line
                 sh 'python3 pipeline_calls.py monitoring'
             }
         }
