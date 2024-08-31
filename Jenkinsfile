@@ -4,13 +4,13 @@ pipeline {
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
         OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY')
-        OCTOPUS_URL = 'https://s224345722.octopus.app'  // Updated with the correct URL
+        OCTOPUS_URL = 'https://s224345722.octopus.app'
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
+                git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main', credentialsId: 'your-github-credentials-id'
             }
         }
 
@@ -40,7 +40,7 @@ pipeline {
                 SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
             }
             steps {
-                withSonarQubeEnv('Local SonarQube') { 
+                withSonarQubeEnv('Local SonarQube') {
                     sh "${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=bin_iot \
                         -Dsonar.sources=. \
@@ -61,11 +61,7 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production using Octopus Deploy...'
-                sh '''
-                octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
-                    --project 'Bin_Iot' --version "1.0.$BUILD_NUMBER" \
-                    --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest"
-                '''
+                sh 'octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY --project Bin_Iot --version "1.0.$BUILD_NUMBER" --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest"'
             }
         }
 
