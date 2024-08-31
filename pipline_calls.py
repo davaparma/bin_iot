@@ -33,6 +33,6 @@ if __name__ == "__main__":
         elif stage == "monitoring":
             monitoring_stage()
         else:
-            print("Unknown stage")
+            print("Error in passing stage from Jenkinsfile!")
     else:
-        print("No stage specified")
+        print("No stage passed from Jenkinsfile to Python Script!")
