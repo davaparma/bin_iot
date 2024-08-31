@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
         OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY')
-        OCTOPUS_URL = 'https://your-octopus-instance.octopus.app'
+        OCTOPUS_URL = 'https://s224345722.octopus.app'  // Updated with the correct URL
     }
 
     stages {
@@ -63,8 +63,8 @@ pipeline {
                 echo 'Releasing to production using Octopus Deploy...'
                 sh '''
                 octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
-                    --project "Your Project Name" --version "1.0.$BUILD_NUMBER" \
-                    --deployTo "Production" --variable "DockerImage=davaparma/my-python-app:latest"
+                    --project 'Your Project Name' --version "1.0.$BUILD_NUMBER" \
+                    --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest"
                 '''
             }
         }
