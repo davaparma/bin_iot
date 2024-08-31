@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
-        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY') // Add your Octopus API key as a credential in Jenkins
-        OCTOPUS_URL = 'https://your-octopus-instance.octopus.app' // Replace with your Octopus instance URL
+        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY')
+        OCTOPUS_URL = 'https://your-octopus-instance.octopus.app'
     }
 
     stages {
@@ -61,24 +61,10 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production using Octopus Deploy...'
-                
-                // Push Docker Image to Octopus Container Registry
-                sh ''' 
-                octo push \
-                --server ${OCTOPUS_URL} \
-                --apiKey ${OCTOPUS_API_KEY} \
-                --package davaparma/my-python-app:latest \
-                --replace-existing
-                '''
-                
-                // Create a release in Octopus
-                sh ''' 
-                octo create-release \
-                --project "Your Project Name" \
-                --version "1.0.${BUILD_ID}" \
-                --server ${OCTOPUS_URL} \
-                --apiKey ${OCTOPUS_API_KEY} \
-                --deployTo "Production"
+                sh '''
+                octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
+                    --project "Your Project Name" --version "1.0.$BUILD_NUMBER" \
+                    --deployTo "Production" --variable "DockerImage=davaparma/my-python-app:latest"
                 '''
             }
         }
