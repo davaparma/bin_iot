@@ -9,14 +9,15 @@ step "run-a-docker-container" {
         properties = {
             Octopus.Action.Package.DownloadOnTentacle = "False"
             Octopus.Action.Package.FeedId = "docker"
-            Octopus.Action.Package.PackageId = "davaparma/my-python-app:latest"
+            Octopus.Action.Package.PackageId = "davaparma/my-python-app"
+            Octopus.Action.RunOnServer = "false"
         }
         worker_pool_variable = ""
 
         packages {
             acquisition_location = "Server"
             feed = "docker"
-            package_id = "davaparma/my-python-app:latest"
+            package_id = "davaparma/my-python-app"
             properties = {
                 SelectionMode = "immediate"
             }
