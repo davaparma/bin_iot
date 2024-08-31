@@ -10,17 +10,22 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building the Docker image...'
-                sh 'docker build -t my-python-app:latest .' 
-                sh 'docker save my-python-app:latest -o my-python-app.tar'
-                archiveArtifacts artifacts: 'my-python-app.tar', allowEmptyArchive: true 
+                echo 'Building the Docker image with Docker Compose...'
+                sh 'docker-compose build'
+
+                echo 'Tagging the Docker image...'
+                sh 'docker tag my-python-app:latest davaparma/my-python-app:latest'
+
+                echo 'Pushing the Docker image to Docker Hub...'
+                sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
+                sh 'docker push davaparma/my-python-app:latest'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running Python unittest for Smart Bin IoT project!'
-                sh 'python3 -m unittest test_bin_iot.py'
+                sh 'docker-compose run app python3 -m unittest test_bin_iot.py'
             }
         }
 
@@ -41,8 +46,9 @@ pipeline {
 
         stage('Deploy to Test Environment') {
             steps {
-                echo 'Deploying to test environment for Smart Bin IoT project!'
-                sh 'python3 pipeline_calls.py deploy'
+                echo 'Deploying to test environment with Docker Compose...'
+                sh 'docker-compose pull'
+                sh 'docker-compose up -d'
             }
         }
 
