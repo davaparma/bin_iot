@@ -26,7 +26,7 @@ pipeline {
 
         stage('Code Quality Analysis') {
             environment {
-                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner' // The name of the SonarQube Scanner tool you configured
+                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner' // Make sure the tool name matches what you configured
             }
             steps {
                 withSonarQubeEnv('Local SonarQube') { // Replace 'Local SonarQube' with the name you gave to your SonarQube instance
