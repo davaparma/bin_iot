@@ -26,15 +26,15 @@ pipeline {
 
         stage('Code Quality Analysis') {
             environment {
-                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner' // Make sure the tool name matches what you configured
+                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
             }
             steps {
-                withSonarQubeEnv('Local SonarQube') { // Replace 'Local SonarQube' with the name you gave to your SonarQube instance
+                withSonarQubeEnv('Local SonarQube') { 
                     sh "${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=bin_iot \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://localhost:9000 \
-                        -Dsonar.login=YOUR_SONARQUBE_TOKEN"
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_AUTH_TOKEN}"
                 }
             }
         }
