@@ -2,12 +2,9 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID') // Replace with your Jenkins credential ID for AWS Access Key
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY') // Replace with your Jenkins credential ID for AWS Secret Key
-        AWS_REGION = 'us-east-2' // Set your AWS region
-        ECR_REPOSITORY = '481665086534.dkr.ecr.us-east-2.amazonaws.com/my-python-app' // Your ECR repository URL
-        ECS_CLUSTER = 'Jenny' // Your ECS Cluster name
-        ECS_SERVICE = 'Jenny' // Your ECS Service name
+        DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
+        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY')
+        OCTOPUS_URL = 'https://s224345722.octopus.app'  // Ensure this is the correct Octopus URL
     }
 
     stages {
@@ -23,32 +20,11 @@ pipeline {
                 sh 'docker-compose build'
 
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-python-app:latest ${ECR_REPOSITORY}:latest'
-            }
-        }
+                sh 'docker tag my-python-app:latest davaparma/my-python-app:latest'
 
-        stage('Authenticate with ECR') {
-            steps {
-                echo 'Authenticating with Amazon ECR...'
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
-                '''
-            }
-        }
-
-        stage('Push to ECR') {
-            steps {
-                echo 'Pushing the Docker image to ECR...'
-                sh 'docker push ${ECR_REPOSITORY}:latest'
-            }
-        }
-
-        stage('Deploy to ECS') {
-            steps {
-                echo 'Deploying the new Docker image to ECS...'
-                sh '''
-                aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment --region $AWS_REGION
-                '''
+                echo 'Pushing the Docker image to Docker Hub...'
+                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
+                sh 'docker push davaparma/my-python-app:latest'
             }
         }
 
@@ -74,6 +50,26 @@ pipeline {
                         -Dsonar.python.version=3.x
                     """
                 }
+            }
+        }
+
+        stage('Deploy to Test Environment') {
+            steps {
+                echo 'Deploying to test environment with Docker Compose...'
+                sh 'docker-compose pull'
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Release to Production') {
+            steps {
+                echo 'Releasing to production using Octopus Deploy...'
+                sh """
+                octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
+                    --project 'Bin_Iot' --version "1.0.$BUILD_NUMBER" \
+                    --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest" \
+                    --progress --ci-server "Jenkins"
+                """
             }
         }
 
