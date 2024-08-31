@@ -19,8 +19,8 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo 'Running tests for Smart Bin IoT project!'
-                sh 'python3 pipeline_calls.py test'
+                echo 'Running Python unittest for Smart Bin IoT project!'
+                sh 'python3 -m unittest test_bin_iot.py'
             }
         }
 
