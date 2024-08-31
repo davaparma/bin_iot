@@ -25,9 +25,17 @@ pipeline {
         }
 
         stage('Code Quality Analysis') {
+            environment {
+                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner' // The name of the SonarQube Scanner tool you configured
+            }
             steps {
-                echo 'Analyzing code quality for Smart Bin IoT project!'
-                sh 'python3 pipeline_calls.py code_quality'
+                withSonarQubeEnv('Local SonarQube') { // Replace 'Local SonarQube' with the name you gave to your SonarQube instance
+                    sh "${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectKey=bin_iot \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://localhost:9000 \
+                        -Dsonar.login=YOUR_SONARQUBE_TOKEN"
+                }
             }
         }
 
@@ -47,7 +55,7 @@ pipeline {
 
         stage('Monitoring & Alerts') {
             steps {
-                echo 'Setting up monitoring and alerts for Smart Bin IoT project!' // Corrected line
+                echo 'Setting up monitoring and alerts for Smart Bin IoT project!'
                 sh 'python3 pipeline_calls.py monitoring'
             }
         }
