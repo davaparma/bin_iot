@@ -63,7 +63,7 @@ pipeline {
                 echo 'Releasing to production using Octopus Deploy...'
                 
                 // Push Docker Image to Octopus Container Registry
-                sh '''
+                sh ''' 
                 octo push \
                 --server ${OCTOPUS_URL} \
                 --apiKey ${OCTOPUS_API_KEY} \
@@ -72,13 +72,13 @@ pipeline {
                 '''
                 
                 // Create a release in Octopus
-                sh '''
+                sh ''' 
                 octo create-release \
-                --project "Your Project Name" \ // Replace with your Octopus Project name
+                --project "Your Project Name" \
                 --version "1.0.${BUILD_ID}" \
                 --server ${OCTOPUS_URL} \
                 --apiKey ${OCTOPUS_API_KEY} \
-                --deployTo "Production" // Replace with your Octopus Environment
+                --deployTo "Production"
                 '''
             }
         }
