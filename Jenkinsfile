@@ -3,14 +3,14 @@ pipeline {
 
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
-        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY')
-        OCTOPUS_URL = 'https://s224345722.octopus.app'
+        OCTOPUS_API_KEY = 'API-CT3D8ZGNZO7HOWCEH2R730GPACTXEF'
+        OCTOPUS_URL = 'https://s224345722.octopus.app'  // Ensure this is the correct Octopus URL
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main', credentialsId: 'your-github-credentials-id'
+                git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
             }
         }
 
@@ -40,12 +40,15 @@ pipeline {
                 SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
             }
             steps {
-                withSonarQubeEnv('Local SonarQube') {
-                    sh "${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                withSonarQubeEnv('Local SonarQube') { 
+                    sh """
+                    ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=bin_iot \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=${SONAR_AUTH_TOKEN}"
+                        -Dsonar.host.url=http://localhost:9000 \
+                        -Dsonar.login=${SONAR_AUTH_TOKEN} \
+                        -Dsonar.python.version=3.x
+                    """
                 }
             }
         }
@@ -61,7 +64,12 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production using Octopus Deploy...'
-                sh 'octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY --project Bin_Iot --version "1.0.$BUILD_NUMBER" --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest"'
+                sh """
+                octo create-release --server $OCTOPUS_URL --apiKey $OCTOPUS_API_KEY \
+                    --project 'Bin_Iot' --version "1.0.$BUILD_NUMBER" \
+                    --deployTo Production --variable "DockerImage=davaparma/my-python-app:latest" \
+                    --progress
+                """
             }
         }
 
@@ -70,6 +78,15 @@ pipeline {
                 echo 'Setting up monitoring and alerts for Smart Bin IoT project!'
                 sh 'python3 pipeline_calls.py monitoring'
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check the logs for errors.'
         }
     }
 }
