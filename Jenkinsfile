@@ -10,8 +10,10 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building Smart Bin IoT project!'
-                sh 'python3 pipeline_calls.py build'
+                echo 'Building the Docker image...'
+                sh 'docker build -t my-python-app:latest .' 
+                sh 'docker save my-python-app:latest -o my-python-app.tar'
+                archiveArtifacts artifacts: 'my-python-app.tar', allowEmptyArchive: true 
             }
         }
 
