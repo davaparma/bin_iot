@@ -18,6 +18,7 @@ pipeline {
             steps {
                 echo 'Preparing Docker context with only the required file...'
                 sh '''
+                    rm -rf docker-context   # Remove the directory if it exists
                     mkdir docker-context
                     cp test_bin_iot.py docker-context/
                 '''
