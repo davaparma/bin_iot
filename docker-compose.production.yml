@@ -1,0 +1,18 @@
+# docker-compose.production.yml
+
+version: '3.8'
+
+services:
+  app:
+    image: davaparma/my-python-app:latest
+    container_name: bin_iot_app
+    ports:
+      - "8090:8080"  # Change port as necessary
+    environment:
+      - ENVIRONMENT=production
+    networks:
+      - bin_iot_network
+
+networks:
+  bin_iot_network:
+    driver: bridge
