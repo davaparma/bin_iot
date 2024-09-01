@@ -8,6 +8,10 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
     }
 
+    options {
+        datadog(collectLogs: true, tags: ["env:production", "team:devops"])
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -70,7 +74,9 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production for Smart Bin IoT project!'
+                
                 sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
+
                 sh '''
                     az webapp config container set \
                         --name mydockerapp \
@@ -85,21 +91,19 @@ pipeline {
         stage('Monitoring & Alerts') {
             steps {
                 echo 'Turning Datadog monitor off and on to trigger alert...'
-                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
-                    sh '''
-                        curl -X PUT -H "Content-type: application/json" \
-                        -H "DD-API-KEY: ${DATADOG_API_KEY}" \
-                        -d '{"monitor_state": "false"}' \
-                        "https://api.datadoghq.com/api/v1/monitor/1083090"
+                sh '''
+                    curl -X PUT -H "Content-type: application/json" \
+                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                    -d '{"monitor_state": "false"}' \
+                    "https://api.us5.datadoghq.com/api/v1/monitor/1083090"
 
-                        sleep 5
+                    sleep 5
 
-                        curl -X PUT -H "Content-type: application/json" \
-                        -H "DD-API-KEY: ${DATADOG_API_KEY}" \
-                        -d '{"monitor_state": "true"}' \
-                        "https://api.datadoghq.com/api/v1/monitor/1083090"
-                    '''
-                }
+                    curl -X PUT -H "Content-type: application/json" \
+                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                    -d '{"monitor_state": "true"}' \
+                    "https://api.us5.datadoghq.com/api/v1/monitor/1083090"
+                '''
             }
         }
     }
