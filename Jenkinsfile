@@ -28,12 +28,6 @@ pipeline {
                     rm -rf docker-context   
                     mkdir docker-context
                     cp app.py docker-context/
-                    echo 'FROM python:3.9-slim' > docker-context/Dockerfile
-                    echo 'COPY app.py /app/app.py' >> docker-context/Dockerfile
-                    echo 'RUN pip install flask' >> docker-context/Dockerfile
-                    echo 'WORKDIR /app' >> docker-context/Dockerfile
-                    echo 'EXPOSE 80' >> docker-context/Dockerfile
-                    echo 'CMD ["python", "app.py"]' >> docker-context/Dockerfile
                 '''
             }
         }
