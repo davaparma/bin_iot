@@ -23,11 +23,12 @@ pipeline {
         }
         stage('Prepare Docker Context') {
             steps {
-                echo 'Preparing Docker context with only the required file...'
+                echo 'Preparing Docker context with only the required files...'
                 sh '''
                     rm -rf docker-context   
                     mkdir docker-context
                     cp app.py docker-context/
+                    cp Dockerfile docker-context/  // Copy the Dockerfile to the context
                 '''
             }
         }
