@@ -18,7 +18,7 @@ pipeline {
             steps {
                 echo 'Preparing Docker context with only the required file...'
                 sh '''
-                    rm -rf docker-context   # Remove the directory if it exists
+                    rm -rf docker-context   
                     mkdir docker-context
                     cp test_bin_iot.py docker-context/
                 '''
@@ -32,7 +32,7 @@ pipeline {
                     docker-compose build
                 '''
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-test-app:latest davaparma/my-python-app:latest'
+                sh 'docker tag my-python-app:latest davaparma/my-test-app:latest'
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
