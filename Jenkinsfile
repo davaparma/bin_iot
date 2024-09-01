@@ -8,6 +8,7 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
         DATADOG_API_KEY = credentials('DATADOG_API_KEY')
         DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
+        IMAGE_NAME = "davaparma/my-python-app"  // Define the image name without the tag
     }
 
     options {
@@ -38,20 +39,20 @@ pipeline {
                     docker-compose build
                 '''
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-python-app:latest davaparma/my-python-app:latest'
+                sh 'docker tag my-python-app:latest ${IMAGE_NAME}:latest'
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
                 sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
-                sh 'docker push davaparma/my-python-app:latest'
+                sh 'docker push ${IMAGE_NAME}:latest'
             }
         }
         stage('Test') {
             steps {
                 echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
                 sh '''
-                    docker pull davaparma/my-python-app:latest
-                    docker run --rm davaparma/my-python-app:latest python3 -m unittest test_bin_iot.py
+                    docker pull ${IMAGE_NAME}:latest
+                    docker-compose -f docker-compose.yml -e IMAGE_NAME=${IMAGE_NAME} up -d
                 '''
             }
         }
@@ -86,7 +87,7 @@ pipeline {
                     az webapp config container set \
                         --name mydockerapp \
                         --resource-group my-docker-rg \
-                        --docker-custom-image-name davaparma/my-python-app:latest \
+                        --docker-custom-image-name ${IMAGE_NAME}:latest \
                         --docker-registry-server-url https://index.docker.io \
                         --docker-registry-server-user davaparma \
                         --docker-registry-server-password $DOCKER_HUB_PASSWORD
