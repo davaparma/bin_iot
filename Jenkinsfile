@@ -92,17 +92,33 @@ pipeline {
             steps {
                 echo 'Turning Datadog monitor off and on to trigger alert...'
                 sh '''
-                    curl -X PUT -H "Content-type: application/json" \
-                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
-                    -d '{"monitor_state": "false"}' \
-                    "https://api.us5.datadoghq.com/api/v1/monitor/1083090"
-
-                    sleep 5
-
-                    curl -X PUT -H "Content-type: application/json" \
-                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
-                    -d '{"monitor_state": "true"}' \
-                    "https://api.us5.datadoghq.com/api/v1/monitor/1083090"
+                    curl -X POST -H "Content-type: application/json" \
+                    -H "DD-API-KEY: 1dabb590cbc7199439a6e9ff39a6b865" \
+                    -H "DD-APPLICATION-KEY: 8a5d9b85693e7e1299cdeb458b080210bd0a8db4" \
+                    -d '{
+                          "name": "Website Online Checker",
+                          "type": "metric alert",
+                          "query": "avg(last_1h):avg:azure.web_serverfarms.current_instance_count{*} == 1",
+                          "message": "Website Successfully Online! @streaky_sling.0o@icloud.com",
+                          "tags": ["env:production"],
+                          "priority": 3,
+                          "options": {
+                            "notify_audit": true,
+                            "locked": false,
+                            "timeout_h": 0,
+                            "new_host_delay": 300,
+                            "require_full_window": true,
+                            "notify_no_data": false,
+                            "renotify_interval": 0,
+                            "escalation_message": "",
+                            "include_tags": true,
+                            "thresholds": {
+                              "critical": 1
+                            },
+                            "evaluation_delay": 300
+                          }
+                        }' \
+                    "https://api.us5.datadoghq.com/api/v1/monitor"
                 '''
             }
         }
