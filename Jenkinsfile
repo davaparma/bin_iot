@@ -34,7 +34,7 @@ pipeline {
                     echo "COPY test_html.js /app/test_html.js" >> docker-context/Dockerfile
                     echo "WORKDIR /app" >> docker-context/Dockerfile
                     echo "RUN npm install jest" >> docker-context/Dockerfile
-                    echo "CMD [\"npm\", \"test\"]" >> docker-context/Dockerfile
+                    echo 'CMD ["npm", "test"]' >> docker-context/Dockerfile
                 '''
             }
         }
@@ -43,7 +43,7 @@ pipeline {
                 echo 'Building the Docker image with Docker Compose...'
                 sh '''
                     cd docker-context
-                    docker-compose build
+                    docker build -t my-html-app:latest .
                 '''
                 echo 'Tagging the Docker image...'
                 sh 'docker tag my-html-app:latest ${IMAGE_NAME}:latest'
