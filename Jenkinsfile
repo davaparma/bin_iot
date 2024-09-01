@@ -38,7 +38,7 @@ pipeline {
                     docker-compose build
                 '''
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-python-app:latest davaparma/my-test-app:latest'
+                sh 'docker tag my-python-app:latest davaparma/my-python-app:latest'
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
@@ -50,8 +50,8 @@ pipeline {
             steps {
                 echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
                 sh '''
-                    docker pull davaparma/my-test-app:latest
-                    docker run --rm davaparma/my-test-app:latest python3 -m unittest test_bin_iot.py
+                    docker pull davaparma/my-python-app:latest
+                    docker run --rm davaparma/my-python-app:latest python3 -m unittest test_bin_iot.py
                 '''
             }
         }
