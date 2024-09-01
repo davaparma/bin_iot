@@ -25,10 +25,11 @@ pipeline {
             steps {
                 echo 'Preparing Docker context with only the required files...'
                 sh '''
-                    rm -rf docker-context   
+                    rm -rf docker-context
                     mkdir docker-context
                     cp app.py docker-context/
                     cp Dockerfile docker-context/
+                    cp requirements.txt docker-context/   // Copy requirements.txt into the Docker context
                 '''
             }
         }
@@ -44,7 +45,6 @@ pipeline {
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
-                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
                 sh 'docker push ${IMAGE_NAME}:latest'
             }
         }
