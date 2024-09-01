@@ -83,23 +83,25 @@ stage('Test') {
             }
         }
 
-        stage('Release to Production') {
-            steps {
-                echo 'Releasing to production for Smart Bin IoT project!'
-                
-                sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
+stage('Release to Production') {
+    steps {
+        echo 'Releasing to production for Smart Bin IoT project!'
+        
+        sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
 
-                sh '''
-                    az webapp config container set \
-                        --name mydockerapp \
-                        --resource-group my-docker-rg \
-                        --docker-custom-image-name ${IMAGE_NAME}:latest \
-                        --docker-registry-server-url https://index.docker.io \
-                        --docker-registry-server-user davaparma \
-                        --docker-registry-server-password $DOCKER_HUB_PASSWORD
-                '''
-            }
-        }
+        sh '''
+            az webapp config container set \
+                --name mydockerapp \
+                --resource-group my-docker-rg \
+                --docker-custom-image-name ${IMAGE_NAME}:latest \
+                --docker-registry-server-url https://index.docker.io \
+                --docker-registry-server-user davaparma \
+                --docker-registry-server-password $DOCKER_HUB_PASSWORD
+        '''
+        sh 'az webapp restart --name mydockerapp --resource-group my-docker-rg'
+    }
+}
+
 
         stage('Monitoring & Alerts') {
             steps {
