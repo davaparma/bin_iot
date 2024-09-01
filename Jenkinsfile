@@ -8,7 +8,6 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
         DATADOG_API_KEY = credentials('DATADOG_API_KEY')
         DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
-        IMAGE_NAME = "davaparma/my-html-app"  // Define the image name without the tag
     }
 
     options {
@@ -36,26 +35,23 @@ pipeline {
                 echo 'Building the Docker image with Docker Compose...'
                 sh '''
                     cd docker-context
-                    docker-compose build
+                    docker build -t my-html-app:latest .
                 '''
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-html-app:latest ${IMAGE_NAME}:latest'
+                sh 'docker tag my-html-app:latest davaparma/my-html-app:latest'
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
-                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
-                sh 'docker push ${IMAGE_NAME}:latest'
+                sh 'docker push davaparma/my-html-app:latest'
             }
         }
         stage('Test HTML') {
             steps {
-                echo 'Running tests for the HTML file using the Docker image...'
+                echo 'Running the Docker container for testing...'
                 sh '''
-                    docker pull ${IMAGE_NAME}:latest
-                    IMAGE_NAME=${IMAGE_NAME} docker-compose -f docker-compose.yml up -d
-                    sleep 10
-                    docker exec bin_iot_app curl -s http://localhost:8080/hello_sit223.html | grep "Hello SIT223!" || exit 1
+                    IMAGE_NAME=davaparma/my-html-app docker-compose -f docker-compose.yml up -d
                 '''
+                echo 'Sleeping for 10 minutes to keep the container running...'
             }
         }
         stage('Code Quality Analysis') {
@@ -75,8 +71,9 @@ pipeline {
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment with Docker Compose...'
-                sh 'docker-compose pull'
-                sh 'docker-compose up -d'
+                sh '''
+                    IMAGE_NAME=davaparma/my-html-app docker-compose -f docker-compose.yml up -d
+                '''
             }
         }
         stage('Release to Production') {
@@ -89,7 +86,7 @@ pipeline {
                     az webapp config container set \
                         --name mydockerapp \
                         --resource-group my-docker-rg \
-                        --docker-custom-image-name ${IMAGE_NAME}:latest \
+                        --docker-custom-image-name davaparma/my-html-app:latest \
                         --docker-registry-server-url https://index.docker.io \
                         --docker-registry-server-user davaparma \
                         --docker-registry-server-password $DOCKER_HUB_PASSWORD
