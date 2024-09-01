@@ -4,6 +4,11 @@ pipeline {
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
         DOCKER_HUB_USERNAME = credentials('DOCKER_HUB_USERNAME')
+        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY') // Add your Octopus API key as a Jenkins credential
+        OCTOPUS_SERVER = 'https://davaparma.octopus.app/' // Replace with your Octopus Deploy instance URL
+        OCTOPUS_PROJECT = 'Demo Deployment' // Replace with your Octopus project name
+        OCTOPUS_ENVIRONMENT = 'Production' // Replace with your Octopus environment name
+        OCTOPUS_PACKAGE = 'davaparma/my-python-app:latest' // The Docker image you're deploying
     }
 
     stages {
@@ -62,8 +67,17 @@ pipeline {
 
         stage('Release to Production') {
             steps {
-                echo 'Deploying to production environment with Docker Compose...'
-                sh 'docker-compose -f docker-compose.production.yml pull'
+                echo 'Deploying to production environment using Octopus Deploy...'
+                sh """
+                octo create-release \
+                    --project="${OCTOPUS_PROJECT}" \
+                    --version="1.0.${env.BUILD_NUMBER}" \
+                    --deploy-to="${OCTOPUS_ENVIRONMENT}" \
+                    --package="${DOCKER_IMAGE}" \
+                    --server="${OCTOPUS_SERVER}" \
+                    --apiKey="${OCTOPUS_API_KEY}"
+                """
+                echo 'Running Docker Compose for production environment...'
                 sh 'docker-compose -f docker-compose.production.yml up -d'
             }
         }
