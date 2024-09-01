@@ -5,8 +5,6 @@ pipeline {
         AWS_REGION = 'us-east-2'
         ECR_REPO = '481665086534.dkr.ecr.us-east-2.amazonaws.com/my-python-app'
         DOCKER_IMAGE_TAG = 'latest'
-        CODEDEPLOY_APPLICATION = 'MyPythonApp'
-        CODEDEPLOY_DEPLOYMENT_GROUP = 'MyAppDeploymentGroup'
     }
 
     stages {
@@ -34,6 +32,10 @@ pipeline {
             steps {
                 echo 'Pushing the Docker image to Amazon ECR...'
                 sh '''
+                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                export AWS_DEFAULT_REGION=${AWS_REGION}
+                
                 $(aws ecr get-login-password --region ${AWS_REGION}) | docker login --username AWS --password-stdin ${ECR_REPO}
                 docker push ${ECR_REPO}:${DOCKER_IMAGE_TAG}
                 '''
@@ -45,8 +47,8 @@ pipeline {
                 echo 'Deploying to production environment using AWS CodeDeploy...'
                 sh '''
                 aws deploy create-deployment \
-                    --application-name ${CODEDEPLOY_APPLICATION} \
-                    --deployment-group-name ${CODEDEPLOY_DEPLOYMENT_GROUP} \
+                    --application-name MyPythonApp \
+                    --deployment-group-name MyAppDeploymentGroup \
                     --s3-location bucket=your-s3-bucket,key=appspec.yml,bundleType=YAML \
                     --region ${AWS_REGION}
                 '''
