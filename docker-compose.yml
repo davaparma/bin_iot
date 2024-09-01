@@ -2,35 +2,17 @@ version: '3.8'
 
 services:
   app:
-    image: davaparma/my-python-app:latest  # Replace with your Docker image name
+    image: "${IMAGE_NAME}:latest" 
     container_name: bin_iot_app
     ports:
-      - "8090:8080"  # Map the container port 8080 to host port 8090
+      - "8090:8080" 
     environment:
       - ENVIRONMENT=development
     volumes:
       - .:/app
     networks:
       - bin_iot_network
-
-  # Add other services here if needed, for example, a database or cache service
-  # db:
-  #   image: postgres:latest
-  #   container_name: bin_iot_db
-  #   environment:
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - db_data:/var/lib/postgresql/data
-  #   networks:
-  #     - bin_iot_network
-
+    command: sh -c "sleep 600" 
 networks:
   bin_iot_network:
     driver: bridge
-
-# Uncomment if you're using volumes for persistent data storage
-# volumes:
-#   db_data:
