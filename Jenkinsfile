@@ -8,7 +8,7 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
         DATADOG_API_KEY = credentials('DATADOG_API_KEY')
         DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
-        IMAGE_NAME = "davaparma/my-python-app"  // Define the image name without the tag
+        IMAGE_NAME = "davaparma/my-python-app"  
     }
 
     options {
@@ -48,18 +48,14 @@ pipeline {
                 sh 'docker push ${IMAGE_NAME}:latest'
             }
         }
-
-stage('Test') {
-    steps {
-        echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
-        sh '''
-            docker run --rm ${IMAGE_NAME}:latest python app.py test
-        '''
-    }
-}
-
-
-
+        stage('Test') {
+            steps {
+                echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
+                sh '''
+                    docker run --rm ${IMAGE_NAME}:latest python app.py test
+                '''
+            }
+        }
         stage('Code Quality Analysis') {
             environment {
                 SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
@@ -74,7 +70,6 @@ stage('Test') {
                 }
             }
         }
-
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment with Docker Compose...'
@@ -82,27 +77,24 @@ stage('Test') {
                 sh 'docker-compose up -d'
             }
         }
-
-stage('Release to Production') {
-    steps {
-        echo 'Releasing to production for Smart Bin IoT project!'
+        stage('Release to Production') {
+            steps {
+                echo 'Releasing to production for Smart Bin IoT project!'
+                
+                sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
         
-        sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
-
-        sh '''
-            az webapp config container set \
-                --name mydockerapp \
-                --resource-group my-docker-rg \
-                --docker-custom-image-name ${IMAGE_NAME}:latest \
-                --docker-registry-server-url https://index.docker.io \
-                --docker-registry-server-user davaparma \
-                --docker-registry-server-password $DOCKER_HUB_PASSWORD
-        '''
-        sh 'az webapp restart --name mydockerapp --resource-group my-docker-rg'
-    }
-}
-
-
+                sh '''
+                    az webapp config container set \
+                        --name mydockerapp \
+                        --resource-group my-docker-rg \
+                        --docker-custom-image-name ${IMAGE_NAME}:latest \
+                        --docker-registry-server-url https://index.docker.io \
+                        --docker-registry-server-user davaparma \
+                        --docker-registry-server-password $DOCKER_HUB_PASSWORD
+                '''
+                sh 'az webapp restart --name mydockerapp --resource-group my-docker-rg'
+            }
+        }
         stage('Monitoring & Alerts') {
             steps {
                 echo 'Turning Datadog monitor off and on to trigger alert...'
