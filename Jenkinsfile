@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
+        AZURE_CLIENT_ID = credentials('AZURE_CLIENT_ID')
+        AZURE_CLIENT_SECRET = credentials('AZURE_CLIENT_SECRET')
+        AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
     }
 
     stages {
@@ -66,7 +69,20 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production for Smart Bin IoT project!'
-                sh 'python3 pipeline_calls.py release'
+                
+                // Login to Azure
+                sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
+
+                // Deploy the Docker image to Azure Web App
+                sh '''
+                    az webapp config container set \
+                        --name mydockerapp \
+                        --resource-group my-docker-rg \
+                        --docker-custom-image-name davaparma/my-python-app:latest \
+                        --docker-registry-server-url https://index.docker.io \
+                        --docker-registry-server-user davaparma \
+                        --docker-registry-server-password $DOCKER_HUB_PASSWORD
+                '''
             }
         }
         stage('Monitoring & Alerts') {
