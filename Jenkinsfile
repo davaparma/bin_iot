@@ -70,11 +70,7 @@ pipeline {
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production for Smart Bin IoT project!'
-                
-                // Login to Azure
                 sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
-
-                // Deploy the Docker image to Azure Web App
                 sh '''
                     az webapp config container set \
                         --name mydockerapp \
@@ -88,8 +84,20 @@ pipeline {
         }
         stage('Monitoring & Alerts') {
             steps {
-                echo 'Setting up monitoring and alerts for Smart Bin IoT project!'
-                sh 'python3 pipeline_calls.py monitoring'
+                echo 'Turning Datadog monitor off and on to trigger email!
+                sh '''
+                    curl -X PUT -H "Content-type: application/json" \
+                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                    -d '{"monitor_state": "false"}' \
+                    "https://api.datadoghq.com/api/v1/monitor/1083090"
+
+                    sleep 5
+
+                    curl -X PUT -H "Content-type: application/json" \
+                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                    -d '{"monitor_state": "true"}' \
+                    "https://api.datadoghq.com/api/v1/monitor/1083090"
+                '''
             }
         }
     }
