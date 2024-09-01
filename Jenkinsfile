@@ -2,13 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
-        DOCKER_HUB_USERNAME = credentials('DOCKER_HUB_USERNAME')
-        OCTOPUS_API_KEY = credentials('OCTOPUS_API_KEY') // Add your Octopus API key as a Jenkins credential
-        OCTOPUS_SERVER = 'https://davaparma.octopus.app/' // Replace with your Octopus Deploy instance URL
-        OCTOPUS_PROJECT = 'Demo Deployment' // Replace with your Octopus project name
-        OCTOPUS_ENVIRONMENT = 'Production' // Replace with your Octopus environment name
-        OCTOPUS_PACKAGE = 'davaparma/my-python-app:latest' // The Docker image you're deploying
+        AWS_REGION = 'us-east-2'
+        ECR_REPO = '481665086534.dkr.ecr.us-east-2.amazonaws.com/my-python-app'
+        DOCKER_IMAGE_TAG = 'latest'
+        CODEDEPLOY_APPLICATION = 'MyPythonApp'
+        CODEDEPLOY_DEPLOYMENT_GROUP = 'MyAppDeploymentGroup'
     }
 
     stages {
@@ -22,63 +20,36 @@ pipeline {
             steps {
                 echo 'Building the Docker image with Docker Compose...'
                 sh 'docker-compose build'
+            }
+        }
 
+        stage('Tag Docker Image') {
+            steps {
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-python-app:latest davaparma/my-python-app:latest'
-
-                echo 'Pushing the Docker image to Docker Hub...'
-                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
-                sh 'docker push davaparma/my-python-app:latest'
+                sh "docker tag my-python-app:latest ${ECR_REPO}:${DOCKER_IMAGE_TAG}"
             }
         }
 
-        stage('Test') {
+        stage('Push to ECR') {
             steps {
-                echo 'Running Python unittest for Smart Bin IoT project!'
-                sh 'docker-compose run app python3 -m unittest test_bin_iot.py'
+                echo 'Pushing the Docker image to Amazon ECR...'
+                sh '''
+                $(aws ecr get-login-password --region ${AWS_REGION}) | docker login --username AWS --password-stdin ${ECR_REPO}
+                docker push ${ECR_REPO}:${DOCKER_IMAGE_TAG}
+                '''
             }
         }
 
-        stage('Code Quality Analysis') {
-            environment {
-                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
-            }
+        stage('Deploy to Production') {
             steps {
-                withSonarQubeEnv('Local SonarQube') {
-                    sh """
-                    ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
-                        -Dsonar.projectKey=bin_iot \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://localhost:9000 \
-                        -Dsonar.login=${SONAR_AUTH_TOKEN} \
-                        -Dsonar.python.version=3.x
-                    """
-                }
-            }
-        }
-
-        stage('Deploy to Test Environment') {
-            steps {
-                echo 'Deploying to test environment with Docker Compose...'
-                sh 'docker-compose pull'
-                sh 'docker-compose up -d'
-            }
-        }
-
-        stage('Release to Production') {
-            steps {
-                echo 'Deploying to production environment using Octopus Deploy...'
-                sh """
-                octo create-release \
-                    --project="${OCTOPUS_PROJECT}" \
-                    --version="1.0.${env.BUILD_NUMBER}" \
-                    --deploy-to="${OCTOPUS_ENVIRONMENT}" \
-                    --package="${DOCKER_IMAGE}" \
-                    --server="${OCTOPUS_SERVER}" \
-                    --apiKey="${OCTOPUS_API_KEY}"
-                """
-                echo 'Running Docker Compose for production environment...'
-                sh 'docker-compose -f docker-compose.production.yml up -d'
+                echo 'Deploying to production environment using AWS CodeDeploy...'
+                sh '''
+                aws deploy create-deployment \
+                    --application-name ${CODEDEPLOY_APPLICATION} \
+                    --deployment-group-name ${CODEDEPLOY_DEPLOYMENT_GROUP} \
+                    --s3-location bucket=your-s3-bucket,key=appspec.yml,bundleType=YAML \
+                    --region ${AWS_REGION}
+                '''
             }
         }
 
