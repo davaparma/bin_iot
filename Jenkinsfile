@@ -21,18 +21,19 @@ pipeline {
                 git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
             }
         }
-        stage('Prepare Docker Context') {
-            steps {
-                echo 'Preparing Docker context with only the required files...'
-                sh '''
-                    rm -rf docker-context
-                    mkdir docker-context
-                    cp app.py docker-context/
-                    cp Dockerfile docker-context/
-                    cp requirements.txt docker-context/   // Copy requirements.txt into the Docker context
-                '''
-            }
+    stage('Prepare Docker Context') {
+        steps {
+            echo 'Preparing Docker context with only the required files...'
+            sh '''
+                rm -rf docker-context
+                mkdir docker-context
+                cp app.py docker-context/
+                cp Dockerfile docker-context/
+                cp requirements.txt docker-context/
+            '''
         }
+    }
+
         stage('Build') {
             steps {
                 echo 'Building the Docker image with Docker Compose...'
