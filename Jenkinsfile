@@ -28,7 +28,7 @@ pipeline {
                     rm -rf docker-context   
                     mkdir docker-context
                     cp app.py docker-context/
-                    cp Dockerfile docker-context/  // Copy the Dockerfile to the context
+                    cp Dockerfile docker-context/
                 '''
             }
         }
