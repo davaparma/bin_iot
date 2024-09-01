@@ -21,18 +21,17 @@ pipeline {
                 git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
             }
         }
-    stage('Prepare Docker Context') {
-        steps {
-            echo 'Preparing Docker context with only the required files...'
-            sh '''
-                rm -rf docker-context
-                mkdir docker-context
-                cp app.py docker-context/
-                cp Dockerfile docker-context/
-                cp requirements.txt docker-context/
-            '''
+
+        stage('Prepare Docker Context') {
+            steps {
+                echo 'Preparing Docker context with only the required files...'
+                sh '''
+                    rm -rf docker-context
+                    mkdir docker-context
+                    cp app.py test_smart_bin.py Dockerfile requirements.txt docker-context/
+                '''
+            }
         }
-    }
 
         stage('Build') {
             steps {
@@ -49,15 +48,16 @@ pipeline {
                 sh 'docker push ${IMAGE_NAME}:latest'
             }
         }
+
         stage('Test') {
             steps {
                 echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
                 sh '''
-                    docker pull ${IMAGE_NAME}:latest
-                    IMAGE_NAME=${IMAGE_NAME} docker-compose -f docker-compose.yml up -d
+                    docker run --rm ${IMAGE_NAME}:latest python test_smart_bin.py
                 '''
             }
         }
+
         stage('Code Quality Analysis') {
             environment {
                 SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
@@ -72,6 +72,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment with Docker Compose...'
@@ -79,6 +80,7 @@ pipeline {
                 sh 'docker-compose up -d'
             }
         }
+
         stage('Release to Production') {
             steps {
                 echo 'Releasing to production for Smart Bin IoT project!'
@@ -96,6 +98,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Monitoring & Alerts') {
             steps {
                 echo 'Turning Datadog monitor off and on to trigger alert...'
