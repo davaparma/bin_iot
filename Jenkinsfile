@@ -5,6 +5,7 @@ pipeline {
         AWS_REGION = 'us-east-2'
         ECR_REPO = '481665086534.dkr.ecr.us-east-2.amazonaws.com/my-python-app'
         DOCKER_IMAGE_TAG = 'latest'
+        AWS_CREDENTIALS_ID = 'aws-credentials' // The ID you assigned to the credentials in Jenkins
     }
 
     stages {
@@ -30,15 +31,18 @@ pipeline {
 
         stage('Push to ECR') {
             steps {
-                echo 'Pushing the Docker image to Amazon ECR...'
-                sh '''
-                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                export AWS_DEFAULT_REGION=${AWS_REGION}
-                
-                $(aws ecr get-login-password --region ${AWS_REGION}) | docker login --username AWS --password-stdin ${ECR_REPO}
-                docker push ${ECR_REPO}:${DOCKER_IMAGE_TAG}
-                '''
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "${AWS_CREDENTIALS_ID}",
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    echo 'Pushing the Docker image to Amazon ECR...'
+                    sh '''
+                    $(aws ecr get-login-password --region ${AWS_REGION}) | docker login --username AWS --password-stdin ${ECR_REPO}
+                    docker push ${ECR_REPO}:${DOCKER_IMAGE_TAG}
+                    '''
+                }
             }
         }
 
