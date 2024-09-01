@@ -8,7 +8,6 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
         DATADOG_API_KEY = credentials('DATADOG_API_KEY')
         DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
-        IMAGE_NAME = "davaparma/my-python-app"  // Define the image name without the tag
     }
 
     options {
@@ -18,7 +17,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
+                git url: 'https://github.com/davaparma/your-repo.git', branch: 'main'
             }
         }
         stage('Prepare Docker Context') {
@@ -27,7 +26,7 @@ pipeline {
                 sh '''
                     rm -rf docker-context   
                     mkdir docker-context
-                    cp test_bin_iot.py docker-context/
+                    cp hello_sit223.html docker-context/
                 '''
             }
         }
@@ -39,21 +38,24 @@ pipeline {
                     docker-compose build
                 '''
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-python-app:latest ${IMAGE_NAME}:latest'
+                sh 'docker tag my-html-app:latest davaparma/my-html-app:latest'
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
                 sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
-                sh 'docker push ${IMAGE_NAME}:latest'
+                sh 'docker push davaparma/my-html-app:latest'
             }
         }
-        stage('Test') {
+        stage('Prepare Testing Environment') {
             steps {
-                echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
-                sh '''
-                    docker pull ${IMAGE_NAME}:latest
-                    IMAGE_NAME=${IMAGE_NAME} docker-compose -f docker-compose.yml up -d
-                '''
+                sh 'npm init -y' // Initialize a Node.js project if not done yet
+                sh 'npm install puppeteer' // Install Puppeteer for testing
+            }
+        }
+        stage('Test HTML') {
+            steps {
+                echo 'Running Puppeteer test for hello_sit223.html!'
+                sh 'node test_html.js' // Run the Puppeteer test script
             }
         }
         stage('Code Quality Analysis') {
@@ -63,7 +65,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('Local SonarQube') { 
                     sh "${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
-                        -Dsonar.projectKey=bin_iot \
+                        -Dsonar.projectKey=html_project \
                         -Dsonar.sources=. \
                         -Dsonar.host.url=${SONAR_HOST_URL} \
                         -Dsonar.login=${SONAR_AUTH_TOKEN}"
@@ -79,7 +81,7 @@ pipeline {
         }
         stage('Release to Production') {
             steps {
-                echo 'Releasing to production for Smart Bin IoT project!'
+                echo 'Releasing to production for hello_sit223.html project!'
                 
                 sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
 
@@ -87,7 +89,7 @@ pipeline {
                     az webapp config container set \
                         --name mydockerapp \
                         --resource-group my-docker-rg \
-                        --docker-custom-image-name ${IMAGE_NAME}:latest \
+                        --docker-custom-image-name davaparma/my-html-app:latest \
                         --docker-registry-server-url https://index.docker.io \
                         --docker-registry-server-user davaparma \
                         --docker-registry-server-password $DOCKER_HUB_PASSWORD
