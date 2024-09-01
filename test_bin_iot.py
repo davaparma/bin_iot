@@ -1,6 +1,6 @@
 import unittest
 
-print("This is my python app!")
+print("This is Ari's python app!")
 class TestSmartBin(unittest.TestCase):
 
     def test_bin_level(self):
