@@ -28,7 +28,7 @@ pipeline {
                 sh '''
                     rm -rf docker-context
                     mkdir docker-context
-                    cp app.py test_smart_bin.py Dockerfile requirements.txt docker-context/
+                    cp app.py Dockerfile requirements.txt docker-context/
                 '''
             }
         }
