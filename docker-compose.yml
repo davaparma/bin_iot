@@ -3,6 +3,6 @@ services:
   app:
     image: davaparma/my-python-app:latest
     ports:
-      - "8080:80"
+      - "8081:8080"
     environment:
-      - NAME=World
+      - ENV=production
