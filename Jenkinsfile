@@ -52,7 +52,7 @@ pipeline {
                 echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
                 sh '''
                     docker pull ${IMAGE_NAME}:latest
-                    docker-compose -f docker-compose.yml -e IMAGE_NAME=${IMAGE_NAME} up -d
+                    IMAGE_NAME=${IMAGE_NAME} docker-compose -f docker-compose.yml up -d
                 '''
             }
         }
