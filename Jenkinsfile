@@ -49,14 +49,15 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
-                sh '''
-                    docker run --rm ${IMAGE_NAME}:latest python test_smart_bin.py
-                '''
-            }
-        }
+stage('Test') {
+    steps {
+        echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
+        sh '''
+            docker run --rm ${IMAGE_NAME}:latest python app.py test
+        '''
+    }
+}
+
 
         stage('Code Quality Analysis') {
             environment {
