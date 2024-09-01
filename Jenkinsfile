@@ -8,7 +8,7 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
         DATADOG_API_KEY = credentials('DATADOG_API_KEY')
         DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
-        IMAGE_NAME = "davaparma/my-html-app"  // Define the image name without the tag
+        IMAGE_NAME = "davaparma/my-html-app"
     }
 
     options {
@@ -33,6 +33,7 @@ pipeline {
                     echo "COPY hello_sit223.html /app/hello_sit223.html" >> docker-context/Dockerfile
                     echo "COPY test_html.js /app/test_html.js" >> docker-context/Dockerfile
                     echo "WORKDIR /app" >> docker-context/Dockerfile
+                    echo "RUN npm install puppeteer" >> docker-context/Dockerfile
                     echo 'CMD ["node", "test_html.js"]' >> docker-context/Dockerfile
                 '''
             }
