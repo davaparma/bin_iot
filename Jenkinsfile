@@ -6,7 +6,6 @@ pipeline {
         AZURE_CLIENT_ID = credentials('AZURE_CLIENT_ID')
         AZURE_CLIENT_SECRET = credentials('AZURE_CLIENT_SECRET')
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
-        DATADOG_API_KEY = 'b8194390163f773d033236714236970a'
     }
 
     stages {
@@ -86,19 +85,21 @@ pipeline {
         stage('Monitoring & Alerts') {
             steps {
                 echo 'Turning Datadog monitor off and on to trigger alert...'
-                sh '''
-                    curl -X PUT -H "Content-type: application/json" \
-                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
-                    -d '{"monitor_state": "false"}' \
-                    "https://api.datadoghq.com/api/v1/monitor/1083090"
+                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+                    sh '''
+                        curl -X PUT -H "Content-type: application/json" \
+                        -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                        -d '{"monitor_state": "false"}' \
+                        "https://api.datadoghq.com/api/v1/monitor/1083090"
 
-                    sleep 5
+                        sleep 5
 
-                    curl -X PUT -H "Content-type: application/json" \
-                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
-                    -d '{"monitor_state": "true"}' \
-                    "https://api.datadoghq.com/api/v1/monitor/1083090"
-                '''
+                        curl -X PUT -H "Content-type: application/json" \
+                        -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                        -d '{"monitor_state": "true"}' \
+                        "https://api.datadoghq.com/api/v1/monitor/1083090"
+                    '''
+                }
             }
         }
     }
