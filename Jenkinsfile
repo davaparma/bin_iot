@@ -36,7 +36,7 @@ pipeline {
                 echo 'Building the Docker image with Docker Compose...'
                 sh '''
                     cd docker-context
-                    docker-compose build
+                    docker build --platform linux/amd64 -t my-python-app:latest .
                 '''
                 echo 'Tagging the Docker image...'
                 sh 'docker tag my-python-app:latest ${IMAGE_NAME}:latest'
