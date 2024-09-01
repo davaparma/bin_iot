@@ -11,10 +11,22 @@ pipeline {
                 git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
             }
         }
+        stage('Prepare Docker Context') {
+            steps {
+                echo 'Preparing Docker context with only the required file...'
+                sh '''
+                    mkdir docker-context
+                    cp test_bin_iot.py docker-context/
+                '''
+            }
+        }
         stage('Build') {
             steps {
                 echo 'Building the Docker image with Docker Compose...'
-                sh 'docker-compose build'
+                sh '''
+                    cd docker-context
+                    docker-compose build
+                '''
                 echo 'Tagging the Docker image...'
                 sh 'docker tag my-python-app:latest davaparma/my-python-app:latest'
 
