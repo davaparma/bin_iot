@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_HUB_PASSWORD = credentials('DOCKER_HUB_PASSWORD')
         AWS_REGION = 'us-east-2'
         ECR_REPO = '481665086534.dkr.ecr.us-east-2.amazonaws.com/my-python-app'
         DOCKER_IMAGE_TAG = 'latest'
@@ -29,6 +30,14 @@ pipeline {
             }
         }
 
+        stage('Push to Docker Hub') {
+            steps {
+                echo 'Pushing the Docker image to Docker Hub...'
+                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
+                sh 'docker push davaparma/my-python-app:latest'
+            }
+        }
+
         stage('Push to ECR') {
             steps {
                 withCredentials([[
@@ -47,16 +56,41 @@ pipeline {
             }
         }
 
-        stage('Deploy to Production') {
+        stage('Test') {
             steps {
-                echo 'Deploying to production environment using AWS CodeDeploy...'
-                sh '''
-                aws deploy create-deployment \
-                    --application-name MyPythonApp \
-                    --deployment-group-name MyAppDeploymentGroup \
-                    --s3-location bucket=your-s3-bucket,key=appspec.yml,bundleType=YAML \
-                    --region ${AWS_REGION}
-                '''
+                echo 'Running Python unittest for Smart Bin IoT project!'
+                sh 'docker-compose run app python3 -m unittest test_bin_iot.py'
+            }
+        }
+
+        stage('Code Quality Analysis') {
+            environment {
+                SONARQUBE_SCANNER_HOME = tool 'SonarQube Scanner'
+            }
+            steps {
+                withSonarQubeEnv('Local SonarQube') { 
+                    sh "${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectKey=bin_iot \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_AUTH_TOKEN}"
+                }
+            }
+        }
+
+        stage('Deploy to Test Environment') {
+            steps {
+                echo 'Deploying to test environment with Docker Compose...'
+                sh 'docker-compose pull'
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Release to Production') {
+            steps {
+                echo 'Releasing to production for Smart Bin IoT project!'
+                sh 'docker-compose -f docker-compose.production.yml pull'
+                sh 'docker-compose -f docker-compose.production.yml up -d'
             }
         }
 
@@ -65,15 +99,6 @@ pipeline {
                 echo 'Setting up monitoring and alerts for Smart Bin IoT project!'
                 sh 'python3 pipeline_calls.py monitoring'
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check the logs for errors.'
         }
     }
 }
