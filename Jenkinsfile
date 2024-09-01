@@ -6,6 +6,8 @@ pipeline {
         AZURE_CLIENT_ID = credentials('AZURE_CLIENT_ID')
         AZURE_CLIENT_SECRET = credentials('AZURE_CLIENT_SECRET')
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
+        DATADOG_API_KEY = credentials('DATADOG_API_KEY')
+        DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
     }
 
     options {
@@ -93,8 +95,8 @@ pipeline {
                 echo 'Turning Datadog monitor off and on to trigger alert...'
                 sh '''
                     curl -X POST -H "Content-type: application/json" \
-                    -H "DD-API-KEY: 1dabb590cbc7199439a6e9ff39a6b865" \
-                    -H "DD-APPLICATION-KEY: 8a5d9b85693e7e1299cdeb458b080210bd0a8db4" \
+                    -H "DD-API-KEY: ${DATADOG_API_KEY}" \
+                    -H "DD-APPLICATION-KEY: ${DATADOG_APP_KEY}" \
                     -d '{
                           "name": "Website Online Checker",
                           "type": "metric alert",
