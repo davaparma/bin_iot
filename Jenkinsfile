@@ -48,8 +48,11 @@ pipeline {
         }
         stage('Test') {
             steps {
-                echo 'Running Python unittest for Smart Bin IoT project!'
-                sh 'docker-compose run app python3 -m unittest test_bin_iot.py'
+                echo 'Running Python unittest for Smart Bin IoT project using the Docker image...'
+                sh '''
+                    docker pull davaparma/my-test-app:latest
+                    docker run --rm davaparma/my-test-app:latest python3 -m unittest test_bin_iot.py
+                '''
             }
         }
         stage('Code Quality Analysis') {
