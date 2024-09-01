@@ -8,6 +8,7 @@ pipeline {
         AZURE_TENANT_ID = credentials('AZURE_TENANT_ID')
         DATADOG_API_KEY = credentials('DATADOG_API_KEY')
         DATADOG_APP_KEY = credentials('DATADOG_APP_KEY')
+        IMAGE_NAME = "davaparma/my-html-app"  // Define the image name without the tag
     }
 
     options {
@@ -27,6 +28,13 @@ pipeline {
                     rm -rf docker-context   
                     mkdir docker-context
                     cp hello_sit223.html docker-context/
+                    cp test_html.js docker-context/
+                    echo "FROM node:alpine" > docker-context/Dockerfile
+                    echo "COPY hello_sit223.html /app/hello_sit223.html" >> docker-context/Dockerfile
+                    echo "COPY test_html.js /app/test_html.js" >> docker-context/Dockerfile
+                    echo "WORKDIR /app" >> docker-context/Dockerfile
+                    echo "RUN npm install jest" >> docker-context/Dockerfile
+                    echo "CMD [\"npm\", \"test\"]" >> docker-context/Dockerfile
                 '''
             }
         }
@@ -35,23 +43,24 @@ pipeline {
                 echo 'Building the Docker image with Docker Compose...'
                 sh '''
                     cd docker-context
-                    docker build -t my-html-app:latest .
+                    docker-compose build
                 '''
                 echo 'Tagging the Docker image...'
-                sh 'docker tag my-html-app:latest davaparma/my-html-app:latest'
+                sh 'docker tag my-html-app:latest ${IMAGE_NAME}:latest'
 
                 echo 'Pushing the Docker image to Docker Hub...'
                 sh 'docker login -u davaparma -p $DOCKER_HUB_PASSWORD'
-                sh 'docker push davaparma/my-html-app:latest'
+                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u davaparma --password-stdin'
+                sh 'docker push ${IMAGE_NAME}:latest'
             }
         }
-        stage('Test HTML') {
+        stage('Test') {
             steps {
-                echo 'Running the Docker container for testing...'
+                echo 'Running tests for HTML using the Docker image...'
                 sh '''
-                    IMAGE_NAME=davaparma/my-html-app docker-compose -f docker-compose.yml up -d
+                    docker pull ${IMAGE_NAME}:latest
+                    docker run --rm ${IMAGE_NAME}:latest
                 '''
-                echo 'Sleeping for 10 minutes to keep the container running...'
             }
         }
         stage('Code Quality Analysis') {
@@ -71,14 +80,13 @@ pipeline {
         stage('Deploy to Test Environment') {
             steps {
                 echo 'Deploying to test environment with Docker Compose...'
-                sh '''
-                    IMAGE_NAME=davaparma/my-html-app docker-compose -f docker-compose.yml up -d
-                '''
+                sh 'docker-compose pull'
+                sh 'docker-compose up -d'
             }
         }
         stage('Release to Production') {
             steps {
-                echo 'Releasing to production for Smart Bin IoT project!'
+                echo 'Releasing to production for HTML project!'
                 
                 sh 'az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID'
 
@@ -86,7 +94,7 @@ pipeline {
                     az webapp config container set \
                         --name mydockerapp \
                         --resource-group my-docker-rg \
-                        --docker-custom-image-name davaparma/my-html-app:latest \
+                        --docker-custom-image-name ${IMAGE_NAME}:latest \
                         --docker-registry-server-url https://index.docker.io \
                         --docker-registry-server-user davaparma \
                         --docker-registry-server-password $DOCKER_HUB_PASSWORD
