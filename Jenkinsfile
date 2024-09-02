@@ -16,25 +16,17 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Build') {
             steps {
+                echo 'Cloning the repository...'
                 git url: 'https://github.com/davaparma/bin_iot.git', branch: 'main'
-            }
-        }
 
-        stage('Prepare Docker Context') {
-            steps {
                 echo 'Preparing Docker context with only the required files...'
                 sh '''
                     rm -rf docker-context
                     mkdir docker-context
                     cp app.py Dockerfile requirements.txt docker-context/
                 '''
-            }
-        }
-
-        stage('Build') {
-            steps {
                 echo 'Building the Docker image with Docker Compose...'
                 sh '''
                     cd docker-context
