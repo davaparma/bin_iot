@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_sit223():
-    return "Howdy - SIT223!"
+    return "Hello - SIT223!"
 
 class TestSmartBin(unittest.TestCase):
     def test_bin_level(self):
