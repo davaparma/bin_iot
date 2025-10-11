@@ -1,0 +1,7 @@
+App: Wave - AI cooking app. Simple, efficient, friendly design. Soft beige bg (#F0DDCC) at 85%, white rounded buttons, gray text, SF Symbols icons. Tabs: Recipes (book.fill), Meal Plan (calendar), Cook (fork.knife), Shopping (list.bullet), Settings (gear). Core: Generate recipes from ingredients (photo/voice/type, toggle pantry-only, 5-6 options with edit/regen, fun facts waiting). Save/remix to receipe book. Shopping auto-add. Cook steps with timers/voice. Learn dislikes/allergies. No chat bloat. Use SwiftUI, MVVM, UserDefaults stubs for now.
+
+Always generate/refactor into separate .swift files for each view/component, matching Figma flow and notes for clean, scalable code—no bloating ContentView.
+
+---
+alwaysApply: true
+---
